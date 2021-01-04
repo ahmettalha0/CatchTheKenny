@@ -1,7 +1,9 @@
 package net.ahmettalha.catchthekenny;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -9,6 +11,7 @@ import android.os.Handler;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Random;
 
@@ -23,7 +26,7 @@ public class GameScreen extends AppCompatActivity {
     ImageView[] imageViews;
     Handler handler;
     Runnable runnable;
-
+    int delay;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +36,7 @@ public class GameScreen extends AppCompatActivity {
         textViewScore = findViewById(R.id.textViewScore);
 
         score = 0;
+        delay = 600;
         time = 20000;
         textViewScore.setText("Score: " + score);
         textViewTime.setText("Time: " + time / 1000);
@@ -59,7 +63,33 @@ public class GameScreen extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                textViewTime.setText("Finished!");
+                textViewTime.setText("Time off!");
+                handler.removeCallbacks(runnable);
+                for (ImageView image : imageViews){
+                    image.setVisibility(View.INVISIBLE);
+                }
+
+                AlertDialog.Builder alert = new AlertDialog.Builder(GameScreen.this);
+                alert.setTitle("Restart?");
+                alert.setMessage("Are you sure to restart game?");
+                alert.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        startActivity(intent);
+                        Toast.makeText(GameScreen.this, "Game Over!", Toast.LENGTH_LONG).show();
+                    }
+                });
+                alert.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = getIntent();
+                        finish();
+                        startActivity(intent);
+                    }
+                });
+                alert.setCancelable(false);
+                alert.show();
             }
         }.start();
 
@@ -67,8 +97,13 @@ public class GameScreen extends AppCompatActivity {
     }
 
     public void kennyClick(View view){
+        int oldScore = score;
         score++;
         textViewScore.setText("Score: " + score);
+
+        if (score != oldScore && delay > 300){
+            delay = delay -50;
+        }
     }
 
     public void exitGame(View view){
@@ -80,7 +115,6 @@ public class GameScreen extends AppCompatActivity {
 
         handler = new Handler();
         runnable = new Runnable() {
-            int delay = 700;
             @Override
             public void run() {
                 for(ImageView image : imageViews){
@@ -90,9 +124,6 @@ public class GameScreen extends AppCompatActivity {
                 int i = random.nextInt(9);
                 imageViews[i].setVisibility(View.VISIBLE);
                 handler.postDelayed(this, delay);
-                if(delay > 300){
-                    delay = delay-33;
-                }
 
             }
         };
